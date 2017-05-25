@@ -10,6 +10,7 @@ from nltk.tokenize import word_tokenize
 
 import tensorflow as tf
 import sys
+from glove import *
 
 MBOX_FOLDER = os.path.expanduser("~/data/epadd/Bush small 2/")
 _NUM_SHARDS = 5
@@ -89,7 +90,7 @@ for mf in mbox_files:
         key = from_addr+'->'+to_addr
         conv[key] = conv.get(key, []) + [Document(words)]
 
-sys.stderr.write("Ignored %d of total %d messages" % (num_ignored, total))
+sys.stderr.write("Ignored %d of total %d messages\n" % (num_ignored, total))
 sys.stderr.write("Total number of words %d\n" % len(vocab))
 vocab = vocab.items()
 vocab.sort(lambda x, y: cmp(x[1], y[1]))
@@ -111,6 +112,7 @@ data = conv.items()
 save_dir = "data"
 num_per_shard = int(math.ceil(len(data) / float(_NUM_SHARDS)))
 num_keys = 0
+glove = Glove(os.path.expanduser("~/data/glove/glove.6B.50d.txt"))
 with tf.Graph().as_default():
     with tf.Session('') as sess:
 
@@ -133,10 +135,12 @@ with tf.Graph().as_default():
 
                     num_keys += 1
                     content = DOC_SEP_STR.join([str(doc) for doc in docs])
+                    coded_content = [glove.vocab[word] for word in content.lower().split() if word in glove.vocab]
+                                        
                     example = tf.train.Example(features=tf.train.Features(feature={
                         'key': tf.train.Feature(bytes_list=tf.train.BytesList(
                             value=[data[i][0]])),
-                        'content': tf.train.Feature(bytes_list=tf.train.BytesList(value=[content]))
+                        'content': tf.train.Feature(int64_list=tf.train.Int64List(value=coded_content))
                     }))
 
                     tfrecord_writer.write(example.SerializeToString())

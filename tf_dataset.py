@@ -31,7 +31,7 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
 
     keys_to_features = {
         'key': tf.VarLenFeature(tf.string),
-        'content': tf.VarLenFeature(tf.string)
+        'content': tf.VarLenFeature(tf.int64)
     }
 
     class Decoder(DataDecoder):
@@ -55,10 +55,10 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
         reader=reader,
         decoder=Decoder(keys_to_features),
         num_samples=SPLITS_TO_SIZES[split_name],
-        items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
-        num_classes=0,
-        labels_to_names={})
+        items_to_descriptions=_ITEMS_TO_DESCRIPTIONS)
 
+import os
+from glove import *
 if __name__=='__main__':
     data_dir = os.path.expanduser("data")
     
@@ -67,11 +67,15 @@ if __name__=='__main__':
         data_provider = slim.dataset_data_provider.DatasetDataProvider(
             dataset, common_queue_capacity=32, common_queue_min=1)
 
-        key, content = data_provider.get(
-            ['key', 'content'])
-
+        key, content = data_provider.get(['key', 'content'])
+ 
+        glove = Glove(os.path.expanduser("~/data/glove/glove.6B.50d.txt"))
+        emb = tf.constant(glove.get_nparray())
+        glove = None
+        
         with tf.Session() as sess:
             with slim.queues.QueueRunners(sess):
                 for i in xrange(10):
                     k, c = sess.run([key, content])
                     print "Key: %s\n Content: %s\n" % (k, c)
+                    print tf.nn.embedding_lookup(emb, content.values).eval()
