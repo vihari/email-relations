@@ -140,7 +140,8 @@ with tf.Graph().as_default():
                     example = tf.train.Example(features=tf.train.Features(feature={
                         'key': tf.train.Feature(bytes_list=tf.train.BytesList(
                             value=[data[i][0]])),
-                        'content': tf.train.Feature(int64_list=tf.train.Int64List(value=coded_content))
+                        'content': tf.train.Feature(int64_list=tf.train.Int64List(value=coded_content)),
+                        'length': tf.train.Feature(int64_list=tf.train.Int64List(value=[len(coded_content)]))
                     }))
 
                     tfrecord_writer.write(example.SerializeToString())

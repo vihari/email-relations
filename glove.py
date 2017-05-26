@@ -3,6 +3,8 @@ import argparse
 import numpy as np
 import sys
 
+EMBEDDING_SIZE=50
+
 class Glove(object):
     def __init__(self, vectors_file):
         self.words = []

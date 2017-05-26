@@ -14,7 +14,8 @@ _FILE_PATTERN = "bush-small-%s-*.tfrecord"
 
 _ITEMS_TO_DESCRIPTIONS = {
     'key': 'The agents involved in the conversation',
-    'content': 'All of conversation with documents separated by appropriate marker'
+    'content': 'All of conversation with documents separated by appropriate marker',
+    'length': 'The length of content in number of words'
 }
 
 def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
@@ -31,7 +32,8 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
 
     keys_to_features = {
         'key': tf.VarLenFeature(tf.string),
-        'content': tf.VarLenFeature(tf.int64)
+        'content': tf.VarLenFeature(tf.int64),
+        'length': tf.FixedLenFeature([], tf.int64)
     }
 
     class Decoder(DataDecoder):
@@ -40,6 +42,10 @@ def get_split(split_name, dataset_dir, file_pattern=None, reader=None):
 
         def decode(self, data, items):
             example = parsing_ops.parse_single_example(data, self._keys_to_features)
+            for k in self._keys_to_features:
+                v = self._keys_to_features[k]
+                if isinstance(v, parsing_ops.FixedLenFeature):
+                    example[k] = tf.reshape(example[k], v.shape)
 
             outputs = []
             for item in items:
@@ -67,15 +73,15 @@ if __name__=='__main__':
         data_provider = slim.dataset_data_provider.DatasetDataProvider(
             dataset, common_queue_capacity=32, common_queue_min=1)
 
-        key, content = data_provider.get(['key', 'content'])
+        key, content, length = data_provider.get(['key', 'content', 'length'])
  
-        glove = Glove(os.path.expanduser("~/data/glove/glove.6B.50d.txt"))
-        emb = tf.constant(glove.get_nparray())
+        #glove = Glove(os.path.expanduser("~/data/glove/glove.6B.50d.txt"))
+        #emb = tf.constant(glove.get_nparray())
         glove = None
         
         with tf.Session() as sess:
             with slim.queues.QueueRunners(sess):
                 for i in xrange(10):
-                    k, c = sess.run([key, content])
-                    print "Key: %s\n Content: %s\n" % (k, c)
-                    print tf.nn.embedding_lookup(emb, content.values).eval()
+                    k, c, l = sess.run([key, content, length])
+                    print "Key: %s\n Content: %s Length: %d\n" % (k, c, l)
+                    #print tf.nn.embedding_lookup(emb, content.values).eval()
