@@ -74,13 +74,24 @@ class Glove(object):
         for x in a:
             print("%35s\t\t%f\n" % (self.ivocab[x], dist[x]))
 
-
+    def get_closest(self, query_matrix, n=5):
+        """
+        :param: query_matrix is [batch size x embedding size] matrix -- closest words are found for each of the rows
+        :return: an array of length: batch size of array of length n containing the n closest words 
+        """
+        # normalize input
+        query_matrix = query_matrix/(np.sum(query_matrix**2, axis=1, keepdims=True)**.5)
+        dists = np.matmul(query_matrix, self.W.T)
+        a = np.argsort(-dists)[:, :n]
+        return [[(self.ivocab[x], dists[ri, x]) for x in row] for ri, row in enumerate(a)]
+        
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--vectors_file', default='vectors.txt', type=str)
     args = parser.parse_args()
     N = 10;          # number of closest words that will be shown
     wv = Glove(args.vectors_file)
+    print wv.get_closest(np.random.normal(size=[5, 50]))
     while True:
         input_term = raw_input("\nEnter word or sentence (EXIT to break): ")
         if input_term == 'EXIT':
