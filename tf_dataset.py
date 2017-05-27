@@ -10,7 +10,7 @@ from tensorflow.contrib.slim.python.slim.data.data_decoder import DataDecoder
 slim = tf.contrib.slim
 
 SPLITS_TO_SIZES = {'train': 1000}
-_FILE_PATTERN = "bush-small-%s-*.tfrecord"
+_FILE_PATTERN = "vihari-sent-%s-*.tfrecord"
 
 _ITEMS_TO_DESCRIPTIONS = {
     'key': 'The agents involved in the conversation',

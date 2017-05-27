@@ -91,7 +91,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     N = 10;          # number of closest words that will be shown
     wv = Glove(args.vectors_file)
-    print wv.get_closest(np.random.normal(size=[5, 50]))
     while True:
         input_term = raw_input("\nEnter word or sentence (EXIT to break): ")
         if input_term == 'EXIT':
